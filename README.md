@@ -6,15 +6,17 @@ A python multithreaded crawler to scrape yelp listings built on a weekend as a f
 Prerequisite packages:
 =============
 
-sudo easy_install httplib2 -or- sudo pip install httplib2
+    sudo easy_install httplib2 beautifulsoup4
 
-sudo easy_install beautifulsoup4 -or- sudo pip install beautifulsoup4
+--OR--
+
+    sudo pip install httplib2 beautifulsoup4
 
 Usage:
 =======
 python crawler.py --crawlspeed=10
 
-    crawlspeed: higher the number, faster the crawl
+crawlspeed: higher the number, faster the crawl
 
 Note: Yelp may block IP at high crawl frequencies. 
       Keep at 1 for long duration crawls.
