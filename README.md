@@ -14,16 +14,23 @@ Prerequisite packages:
 
 Usage:
 =======
-python crawler.py --crawlspeed=10
+python crawler.py --crawlspeed=10 --verbose=no
 
-crawlspeed: higher the number, faster the crawl
+verbose: yes/no. Set to yes to see detailed logs
+crawlspeed: Higher the number, faster the crawl.
 
-Note: Yelp may block IP at high crawl frequencies. 
-      Keep at 1 for long duration crawls.
-      Set to 10 or more for high speed crawl at the risk of being blocked
+Note: Yelp may block IP at high crawl frequencies. Set to 10 for moderate speed. 
+      You might have to move to a new machine and lower the number if the IP gets blocked.
+
+Output:
+=========
+Crawl Stats: REPORTS/crawl_stats.tsv
+Crawl Report: REPORTS/crawled_urls.tsv
+Downloaded HTML: CRAWLED_DOCS/
 
 Kill Script:
 ==========
 
     CTRL + Z
     kill %1
+
