@@ -18,8 +18,8 @@ import time
 
 # Configs
 YELP_URL_TEMPLATE = "http://www.yelp.com/search?find_desc=%s&find_loc=%s&start=%s"
-YELP_CATEGORIES_FILE = "categories_test.txt"
-ZIP_CODES_FILE = "zipcodes_test.txt"
+YELP_CATEGORIES_FILE = "categories.txt"
+ZIP_CODES_FILE = "zipcodes.txt"
 OUTPUT_DIR = 'CRAWLED_DOCS'
 REPORTS_DIR = 'REPORTS'
 USER_AGENT = 'Mozilla/5.0 (compatible; Yahoo! Slurp; http://help.yahoo.com/help/us/ysearch/slurp)'
