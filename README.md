@@ -26,9 +26,9 @@ Note: Yelp may block IP at high crawl frequencies. Set to 10 for moderate speed.
 
 Output:
 =========
-Crawl Stats: REPORTS/crawl_stats.tsv
-Crawl Report: REPORTS/crawled_urls.tsv
-Downloaded HTML: CRAWLED_DOCS/
+* Crawl Stats: REPORTS/crawl_stats.tsv
+* Crawl Report: REPORTS/crawled_urls.tsv
+* Downloaded HTML: CRAWLED_DOCS/
 
 Kill Script:
 ==========
