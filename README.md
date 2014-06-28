@@ -17,9 +17,8 @@ Usage:
 
     python crawler.py --crawlspeed=10 --verbose=no
 
-verbose: yes/no. Set to yes to see detailed logs
-
-crawlspeed: Higher the number, faster the crawl.
+- verbose: yes/no. Set to yes to see detailed logs
+- crawlspeed: Higher the number, faster the crawl.
 
 Note: Yelp may block IP at high crawl frequencies. Set to 10 for moderate speed. 
       You might have to move to a new machine and lower the number if the IP gets blocked.
