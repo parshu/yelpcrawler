@@ -7,11 +7,13 @@ Prerequisite packages:
 =============
 
 sudo easy_install httplib2 -or- sudo pip install httplib2
+
 sudo easy_install beautifulsoup4 -or- sudo pip install beautifulsoup4
 
 Usage:
 =======
 python crawler.py --crawlspeed=10
+
     crawlspeed: higher the number, faster the crawl
 
 Note: Yelp may block IP at high crawl frequencies. 
