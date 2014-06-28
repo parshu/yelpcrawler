@@ -35,15 +35,15 @@ def was_visited(link):
 	visitedLinks[link] = True
 	return False
 
-class CrawlerThread(threading.Thread):
+class CrawlerInstance(threading.Thread):
 	global downloadedURLs
 	global visitedLinks
 	
-	def __init__(self, binarySemaphore, url, startIndex):
-		self.binarySemaphore = binarySemaphore
+	def __init__(self, bSemaphore, url, startIndex):
+		self.bSemaphore = bSemaphore
 		self.url = url
 		self.startIndex = startIndex
-		self.threadId = hash(self)
+		self.tid = hash(self)
 		threading.Thread.__init__(self)
 
 	# identify whether a link points to a yelp listing
@@ -119,7 +119,7 @@ class CrawlerThread(threading.Thread):
 			print >> sys.stderr, 'HTTPError ' + str(e.code) + ': ' + self.url
 		
 		if(soup is not None):
-			self.binarySemaphore.acquire() 
+			self.bSemaphore.acquire() 
 			crawlLinks = [] # Links to follow on the page
 			
 			for linkobj in soup.findAll('a',href=True):
@@ -140,10 +140,10 @@ class CrawlerThread(threading.Thread):
 					crawlLinks.append(link)
 				
 							
-			self.binarySemaphore.release()	     
+			self.bSemaphore.release()	     
 			for link in crawlLinks:
 				if(not was_visited(link)):
-					CrawlerThread(binarySemaphore, link, self.startIndex + 10).start()
+					CrawlerInstance(bSemaphore, link, self.startIndex + 10).start()
 
 # Argument parsing for crawl speed		
 argError = False		
@@ -183,7 +183,7 @@ if __name__ == "__main__":
 	reports_fp = open(REPORTS_DIR + '/crawled_urls.tsv', 'a')
 
 
-	binarySemaphore = threading.Semaphore(THREADS)
+	bSemaphore = threading.Semaphore(THREADS)
 
 	# Crawl Strategy: 
 	# 1. Generate deep seed urls by querying yelp for categories combined with zip codes 
@@ -201,7 +201,7 @@ if __name__ == "__main__":
 			category = urllib.quote_plus(category)
 			url = YELP_URL_TEMPLATE % (category, zip.strip(), '0')
 			if(not was_visited(url)):
-				CrawlerThread(binarySemaphore, url, 0).start()
+				CrawlerInstance(bSemaphore, url, 0).start()
 	
 	
 	
