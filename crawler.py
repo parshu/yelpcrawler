@@ -172,7 +172,7 @@ class CrawlerInstance(threading.Thread):
 			for link in crawlLinks:
 				# Only visit links that have not been visited before
 				if(not was_visited(link)):
-					time.sleep(0.4) # Throttling creation of threads to prevent too many connection requests to yelp.com
+					time.sleep(1) # Throttling creation of threads to prevent too many connection requests to yelp.com
 					CrawlerInstance(bSemaphore, link).start()
 
 # Argument parsing for crawl speed		
