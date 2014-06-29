@@ -43,10 +43,10 @@ A python multithreaded crawler to scrape yelp listings built on a weekend as a f
 
 On EC2 medium sized instance, single machine:
 - crawlspeed=3 ( 3 threads ), the average performance was as below:
--- **Throughput:** 290 listing pages dowloaded per min
--- **Focussed Crawl Efficiency:** 70 % ( Listing pages downloaded / Total pages crawled )
+    - **Throughput:** 290 listing pages dowloaded per min
+    - **Focussed Crawl Efficiency:** 70 % ( Listing pages downloaded / Total pages crawled )
 - crawlspeed=10 ( 10 threads ), the average performance was as below:
--- **Throughput:** 610 listing pages dowloaded per min
--- **Focussed Crawl Efficiency:** 70 % ( Listing pages downloaded / Total pages crawled )
+    - **Throughput:** 610 listing pages dowloaded per min
+    - **Focussed Crawl Efficiency:** 70 % ( Listing pages downloaded / Total pages crawled )
 
 Higher throughput is acheivable with higher number of threads
