@@ -15,20 +15,29 @@ from bs4 import BeautifulSoup, SoupStrainer
 import hashlib
 import os
 import time
+import datetime
 
 # Configs
 YELP_URL_TEMPLATE = "http://www.yelp.com/search?find_desc=%s&find_loc=%s&start=%s"
-YELP_CATEGORIES_FILE = "categories_test.txt"
-ZIP_CODES_FILE = "zipcodes_test.txt"
+YELP_CATEGORIES_FILE = "categories.txt"
+ZIP_CODES_FILE = "zipcodes.txt"
 OUTPUT_DIR = 'CRAWLED_DOCS'
 REPORTS_DIR = 'REPORTS'
 USER_AGENT = 'Mozilla/5.0 (compatible; Yahoo! Slurp; http://help.yahoo.com/help/us/ysearch/slurp)'
 THREADS = 10
+VERBOSE = 'no'
 
 # Global URL hashmap to avoid fetching duplicate urls. Simple implementation is not content based
 downloadedURLs = {}
 visitedLinks = {}
+stats = {
+	'listingsDownloaded' : 0,
+	'pagesCrawled' : 0,
+	'pagesRejected' : 0,
+	'startTime': datetime.datetime.utcnow()
+}
 
+# Utility function to check if a link was already visited before. Used after canonicalization
 def was_visited(link):
 	if(visitedLinks.has_key(link)):
 		return True
@@ -38,22 +47,23 @@ def was_visited(link):
 class CrawlerInstance(threading.Thread):
 	global downloadedURLs
 	global visitedLinks
+	global stats
 	
-	def __init__(self, bSemaphore, url, startIndex):
+	
+	def __init__(self, bSemaphore, url):
 		self.bSemaphore = bSemaphore
 		self.url = url
-		self.startIndex = startIndex
 		self.tid = hash(self)
 		threading.Thread.__init__(self)
 
-	# identify whether a link points to a yelp listing
+	# Identify whether a link points to a yelp listing
 	def is_listing_link(self, link):
 		if (link.find('http://www.yelp.com/biz/') == 0):
 			return True
 		return False
 
 
-	# canonicalizes links to a standard format with only desired params to avoid duplicates more efficiently
+	# Canonicalizes links to a standard format with only desired params to avoid duplicates more efficiently
 	def canonicalize(self, link):
 		url_p = urlparse.urlparse(link)
 		base = url_p.scheme + '://' + url_p.netloc + url_p.path
@@ -71,40 +81,53 @@ class CrawlerInstance(threading.Thread):
 		
 		link = base + '?' + param_str.rstrip('&')
 		return link
-		
-		
-		
-		
-		
+	
 
-	# identify whether the link is the 'next' navigation in yelp srp
-	def follow_link(self, link, startIndex):
-		
-		#params = urlparse.parse_qs(urlparse.urlparse(link).query)
+	# Decide whether a link is worth following. SRP pages always lead to listing pages
+	def follow_link(self, link):		
 		if( (link.find('http://www.yelp.com/search?') == 0) ):	
-			
-			# and params.has_key('start')
-			#if (params.get('start',['-100'])[0] == str((startIndex + 10))):
 			return True
 		return False
 		
-	# downloads listing html into local disk and adds entry to report file		
+	# Downloads listing html to local disk and adds entry to report file		
 	def download_listing(self, link):
 		digest = hashlib.sha224(link).hexdigest()
 		if(not downloadedURLs.has_key(digest)):
 			downloadedURLs[digest] = link
 			reports_fp.write(digest + '\t' + link + '\n') # add entry to reports file
-			print "Downloading: " + link
-			content = self.fetch_content(link)
-			f = open(OUTPUT_DIR + '/' + digest + '.html', 'w')
-			f.write(content) # dump html to disk, filename = <hash of url>.html
-			f.close()
-		
-		pass
+			if(VERBOSE == 'yes'):
+				print "Downloading: " + link
+			try:
+				content = self.fetch_content(link, 'listing')
+				f = open(OUTPUT_DIR + '/' + digest + '.html', 'w')
+				f.write(content) # dump html to disk, filename = <hash of url>.html
+				f.close()	
+			except:
+				# Usually happens when Yelp block the IP for frequent requests.
+				print >> sys.stderr, 'HTTPError: ' + self.url	
 	
-	def fetch_content(self, url):
+	# Utility function to fetch page content & update crawl stats
+	def fetch_content(self, url, type):
 		req = urllib2.Request(url, headers={ 'User-Agent': USER_AGENT })
 		content = urllib2.urlopen(req).read()
+		
+		if(type == 'listing'):
+			stats['listingsDownloaded'] = stats['listingsDownloaded'] + 1
+			if( (stats['listingsDownloaded'] % 10) == 0):
+					
+				report_str = 'Downloaded\t%d\nCrawled/Visited\t%d\nRejected\t%d\nFocus Crawl Efficiency\t%.2f %%\nThroughput\t%d pages/min\n' % (stats['listingsDownloaded'],  stats['pagesCrawled'],  stats['pagesRejected'], stats['listingsDownloaded'] * 100.0 / stats['pagesCrawled'] ,  int((stats['pagesCrawled'] * 60.0) / (datetime.datetime.utcnow() - stats['startTime']).seconds) )
+				
+				# Log stats once in a while
+				print report_str.replace('\t', ':').replace('\n',', ')
+				
+				# Dump crawl stats once in a while
+				if( (stats['listingsDownloaded'] % 50) == 0):
+					reports_fp = open(REPORTS_DIR + '/crawl_stats.tsv', 'w')
+					reports_fp.write(report_str)
+					reports_fp.close()
+				
+		stats['pagesCrawled'] = stats['pagesCrawled'] + 1
+		
 		return content
 		
 	def run(self):
@@ -112,11 +135,13 @@ class CrawlerInstance(threading.Thread):
 		#Fetch the page				
 		soup = None
 		try:
-			content = self.fetch_content(self.url)
+			content = self.fetch_content(self.url, 'page')
 			soup = BeautifulSoup(content)
-			print "Fetching: " + self.url
-		except urllib2.HTTPError, e:
-			print >> sys.stderr, 'HTTPError ' + str(e.code) + ': ' + self.url
+			if(VERBOSE == 'yes'):
+				print "Fetching: " + self.url
+		except:
+			# Usually happens when Yelp block the IP for frequent requests.
+			print >> sys.stderr, 'HTTPError: ' + self.url
 		
 		if(soup is not None):
 			self.bSemaphore.acquire() 
@@ -125,29 +150,33 @@ class CrawlerInstance(threading.Thread):
 			for linkobj in soup.findAll('a',href=True):
 				link = linkobj['href']		
 				link = urlparse.urljoin(self.url, link)
-				
-				
-				
-				#download all listing pages
+
+				# Download all listing pages
 				if self.is_listing_link(link):
 					try:
 						self.download_listing(link)
 					except urllib2.HTTPError, e:
 						print >> sys.stderr, 'HTTPError ' + str(e.code) + ': ' + self.url
-				#follow the next link in srp ( add to queue )
-				elif self.follow_link(link, self.startIndex):
+				# Follow links that will lead to listing pages ( add to queue )
+				elif self.follow_link(link):
+					# Canonicalize links since many links can point to same page.
+					# Not doing content level deduping yet
 					link = self.canonicalize(link)
 					crawlLinks.append(link)
+				else:
+					# These are links that don't directly lead to listing pages
+					stats['pagesRejected'] = stats['pagesRejected'] + 1
 				
-							
 			self.bSemaphore.release()	     
 			for link in crawlLinks:
+				# Only visit links that have not been visited before
 				if(not was_visited(link)):
-					CrawlerInstance(bSemaphore, link, self.startIndex + 10).start()
+					time.sleep(0.4) # Throttling creation of threads to prevent too many connection requests to yelp.com
+					CrawlerInstance(bSemaphore, link).start()
 
 # Argument parsing for crawl speed		
 argError = False		
-if(len(sys.argv) == 2):
+if(len(sys.argv) == 3):
 	arg = sys.argv[1]
 	try:
 		if(arg.split('=')[0] == '--crawlspeed'):
@@ -156,24 +185,35 @@ if(len(sys.argv) == 2):
 			argError = True
 	except:
 		argError = True
+	arg = sys.argv[2]
+	try:
+		if(arg.split('=')[0] == '--verbose'):
+			VERBOSE = arg.split('=')[1]
+		else:
+			argError = True
+	except:
+		argError = True
 else:
 	argError = True
 
 if argError:
-	print "Improper arguments: python crawler.py --crawlspeed=10"
+	print "Improper arguments: python crawler.py --crawlspeed=10 --verbose=no"
 	sys.exit(1)
 	  
 	  
 # Main function
 if __name__ == "__main__":   
-	
+	print "-------------------------------------------------"
 	print "Crawl Report: " + REPORTS_DIR + '/crawled_urls.tsv'
 	print "Downloaded HTML: " + OUTPUT_DIR + '/'
+	print "Crawl Stats: " + REPORTS_DIR + '/crawl_stats.tsv'
 	print "-------------------------------------------------"
+	print "Generating deep seed URLs..."
 	
 	# Initializations
 	try:
 		os.remove(REPORTS_DIR + '/crawled_urls.tsv')
+		os.remove(REPORTS_DIR + '/crawl_stats.tsv')
 	except:
 		pass
 	if not os.path.exists(OUTPUT_DIR):
@@ -181,7 +221,7 @@ if __name__ == "__main__":
 	if not os.path.exists(REPORTS_DIR):
 		os.makedirs(REPORTS_DIR)
 	reports_fp = open(REPORTS_DIR + '/crawled_urls.tsv', 'a')
-
+	
 
 	bSemaphore = threading.Semaphore(THREADS)
 
@@ -201,7 +241,8 @@ if __name__ == "__main__":
 			category = urllib.quote_plus(category)
 			url = YELP_URL_TEMPLATE % (category, zip.strip(), '0')
 			if(not was_visited(url)):
-				CrawlerInstance(bSemaphore, url, 0).start()
+				time.sleep(1) # Throttling creation of threads to prevent too many connection requests to yelp.com
+				CrawlerInstance(bSemaphore, url).start()
 	
 	
 	
