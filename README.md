@@ -11,13 +11,16 @@ A python multithreaded crawler to scrape yelp listings built on a weekend as a f
 
 ##Usage
 
-    python crawler.py --crawlspeed=5 --verbose=no
+    python crawler.py --crawlspeed=10 --verbose=no
 
 - **verbose:** yes/no. Set to yes to see detailed logs
 - **crawlspeed:** Higher the number, faster the crawl.
 
-**Note:**  Recommended crawlspeed value is to start at 5. IP might get blocked at higher rates. Use higher rates only if you plan to run for a very short duration or if you are whitelisted.
-      You might have to move to a new machine and lower the number if the IP gets blocked.
+**Note:**  
+- Recommended crawlspeed value is to start at 10. IP might get blocked after about 15 mins depending on your IP address. Use high rates only if you plan to run for a very short duration or if you are whitelisted. You might have to move to a new machine and lower the number if the IP gets blocked.
+- If you want to run for a longer duration without getting blocked, set crawlspeed to 1. Crawl will be slowwwww.
+- This is usually not a problem when you crawl a large number of domains since req/sec/domain can be managed to be low, but since we are just crawling yelp, it might become necessary to throttle requests
+
 
 ##Output:
 
