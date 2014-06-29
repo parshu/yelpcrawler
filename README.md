@@ -11,12 +11,12 @@ A python multithreaded crawler to scrape yelp listings built on a weekend as a f
 
 ##Usage
 
-    python crawler.py --crawlspeed=10 --verbose=no
+    python crawler.py --crawlspeed=5 --verbose=no
 
 - **verbose:** yes/no. Set to yes to see detailed logs
 - **crawlspeed:** Higher the number, faster the crawl.
 
-**Note:** Yelp may block IP at high crawl frequencies. Set to 10 for moderate speed. 
+**Note:**  Recommended crawlspeed value is to start at 5. IP might get blocked at higher rates. Use higher rates only if you plan to run for a very short duration or if you are whitelisted.
       You might have to move to a new machine and lower the number if the IP gets blocked.
 
 ##Output:
@@ -38,8 +38,12 @@ A python multithreaded crawler to scrape yelp listings built on a weekend as a f
 
 ##Results:
 
-On commondity hardware, single machine with crawlspeed=10 ( 10 threads ), the average performance was as below:
-- **Throughput:** 320 listing pages dowloaded per min
-- **Focussed Crawl Efficiency:** 65 % ( Listing pages downloaded / Total pages crawled )
+On EC2 medium sized instance, single machine:
+- crawlspeed=3 ( 3 threads ), the average performance was as below:
+-- **Throughput:** 290 listing pages dowloaded per min
+-- **Focussed Crawl Efficiency:** 70 % ( Listing pages downloaded / Total pages crawled )
+- crawlspeed=10 ( 10 threads ), the average performance was as below:
+-- **Throughput:** 610 listing pages dowloaded per min
+-- **Focussed Crawl Efficiency:** 70 % ( Listing pages downloaded / Total pages crawled )
 
 Higher throughput is acheivable with higher number of threads
