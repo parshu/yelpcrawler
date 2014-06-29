@@ -3,8 +3,7 @@
 Usage: python crawler.py --crawlspeed=10
        crawlspeed: higher the number, faster the crawl
 Note: Yelp may block IP at high crawl frequencies. 
-      Keep at 1 for long duration crawls.
-      Set to 10 or more for high speed crawl
+      Set at 10 and reduce if blocked. 
 ----------------------------------------------------------'''
 
 import threading, urllib, urlparse
@@ -122,6 +121,8 @@ class CrawlerInstance(threading.Thread):
 				
 				# Dump crawl stats once in a while
 				if( (stats['listingsDownloaded'] % 50) == 0):
+					tdelta = (datetime.datetime.utcnow() - stats['startTime'])
+					report_str = report_str + "Run Time\t%d:%d:%d\n" % (tdelta.seconds/3600, tdelta.seconds/60, tdelta.seconds)
 					reports_fp = open(REPORTS_DIR + '/crawl_stats.tsv', 'w')
 					reports_fp.write(report_str)
 					reports_fp.close()
